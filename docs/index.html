@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ka">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#126a52">
+  <meta name="description" content="დღიური 0.11 — ყოველდღიური გეგმები, ჯოკერი, ტაიმერი და მაღვიძარა. ბრაუზერული სატესტო ვერსია.">
+  <title>დღიური • Alpha 0.11</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-icon" aria-hidden="true">✓</div>
+      <div class="brand-copy"><strong id="brand-name">დღიური</strong><span id="brand-sub">შენი დღეები, ლამაზად დაგეგმილი</span></div>
+      <span class="version">α 0.11</span>
+    </header>
+    <main id="app" aria-live="polite"></main>
+    <nav class="bottom-nav" id="nav" aria-label="მთავარი ნავიგაცია"></nav>
+  </div>
+  <div id="overlay"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <script src="./app.js" defer></script>
+</body>
+</html>
