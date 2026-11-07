@@ -106,7 +106,7 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.11", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.12", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
                             Surface(color=Mint,shape=RoundedCornerShape(12.dp)) {
@@ -122,8 +122,7 @@ private fun WeeklyApp() {
                                 "home" -> HomeScreen(store,date,{date=it}, { creating=true }, { editing=it }, { notice=it })
                                 "calendar" -> CalendarScreen(store,date,{date=it},view,{view=it},{creating=true},{editing=it},{notice=it})
                                 "joker" -> DiaryJokerPage()
-                                "timer" -> DiaryTimerPage(::askPermission)
-                                "alarm" -> DiaryAlarmPage(::askPermission)
+                                "clock" -> DiaryClockPage(::askPermission)
                                 "insights" -> InsightsScreen(store)
                                 "settings" -> SettingsScreen(store,::askPermission) { notice=it }
                             }
@@ -141,7 +140,7 @@ private fun WeeklyApp() {
 @Composable
 private fun NavItems(current:String, english:Boolean, onChange:(String)->Unit) {
     val tabs = listOf(Triple("home","⌂",tr("დღეს","Today")),Triple("calendar","▦",tr("კალენდარი","Calendar")),
-        Triple("joker","♠","ჯოკერი"),Triple("timer","⏱","ტაიმერი"),Triple("alarm","⏰","მაღვიძარა"),
+        Triple("joker","♠",tr("ჯოკერი","Joker")),Triple("clock","⏱",tr("საათი","Clock")),
         Triple("insights","▥",tr("შედეგები","Results")),Triple("settings","⚙",tr("პარამეტრები","Settings")))
     tabs.forEach { (key,icon,label) ->
         val selected = current==key
@@ -239,10 +238,10 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
         Surface(shape=MaterialShape,color=if(store.dark) Color(0xFF254538) else Mint,modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) {
-                    Text("★  TOP 3",fontWeight=FontWeight.Bold,color=if(store.dark)Color.White else DarkPine,modifier=Modifier.weight(1f))
-                    Text("${top.size}/3",color=Pine,fontWeight=FontWeight.Bold)
+                    Text("★  TOP",fontWeight=FontWeight.Bold,color=if(store.dark)Color.White else DarkPine,modifier=Modifier.weight(1f))
+                    Text("${top.size}",color=Pine,fontWeight=FontWeight.Bold)
                 }
-                if(top.isEmpty()) Text(tr("დააჭირე ვარსკვლავს საქმეზე — სამეულს შენ თავად ირჩევ.","Tap a star on any task to choose your priorities."),fontSize=12.sp,color=if(store.dark)Color.White else DarkPine)
+                if(top.isEmpty()) Text(tr("დააჭირე ვარსკვლავს ნებისმიერ საქმეზე — რაოდენობა შეუზღუდავია.","Star as many tasks as you wish."),fontSize=12.sp,color=if(store.dark)Color.White else DarkPine)
                 top.forEachIndexed { i,t ->
                     Surface(color=MaterialTheme.colorScheme.surface, shape=RoundedCornerShape(12.dp)) {
                         Row(Modifier.fillMaxWidth().padding(10.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -311,7 +310,7 @@ private fun TaskRow(task:PlanTask,date:LocalDate,store:PlannerStore,onEdit:(Plan
                 if(task.reminder>=0) Text("♩",color=Pine,fontSize=12.sp)
             }
         }
-        Text(if(rank>0)"★" else "☆",Modifier.clickable {if(!store.togglePriority(task,date)) onInfo(tr("TOP 3 უკვე შევსებულია. ჯერ ერთს მოხსენი ვარსკვლავი.","TOP 3 is full. Unstar a task first."))}.padding(9.dp),color=Amber,fontSize=25.sp)
+        Text(if(rank>0)"★" else "☆",Modifier.clickable {store.togglePriority(task,date)}.padding(9.dp),color=Amber,fontSize=25.sp)
         Text("✎",Modifier.clickable {onEdit(task)}.padding(7.dp),fontSize=16.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -339,7 +338,7 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(3.dp)) {
                 (0..6).forEach { i ->
                     val d=start.plusDays(i.toLong())
-                    Surface(shape=RoundedCornerShape(12.dp), color=if(d==date)Pine else MaterialTheme.colorScheme.surface,modifier=Modifier.weight(1f).clickable{onDate(d)}) {
+                    Surface(shape=RoundedCornerShape(12.dp), color=if(d==date)Pine else MaterialTheme.colorScheme.surface,modifier=Modifier.weight(1f).clickable{onDate(d);onView("day")}) {
                         Column(Modifier.padding(vertical=12.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                             Text(d.dayOfWeek.getDisplayName(TextStyle.SHORT,DiaryWords.locale()).take(2),fontSize=10.sp,color=if(d==date)Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("${d.dayOfMonth}",fontSize=14.sp,fontWeight=FontWeight.Bold,color=if(d==date)Color.White else MaterialTheme.colorScheme.onSurface)
@@ -357,7 +356,7 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
                     Row(Modifier.fillMaxWidth()) {
                         (0..6).forEach { dayIndex ->
                             val d=first.plusDays((week*7+dayIndex).toLong())
-                            Column(Modifier.weight(1f).clickable {onDate(d)}.padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                            Column(Modifier.weight(1f).clickable {onDate(d);onView("day")}.padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                                 Surface(color=if(d==date) Pine else Color.Transparent,shape=CircleShape) {
                                     Text("${d.dayOfMonth}",Modifier.padding(horizontal=8.dp,vertical=5.dp),fontSize=12.sp,color=if(d==date)Color.White else if(d.monthValue!=date.monthValue)Color.Gray else MaterialTheme.colorScheme.onSurface)
                                 }
@@ -525,7 +524,7 @@ private fun SettingsScreen(store:PlannerStore,requestPermission:()->Unit,onInfo:
             DiaryReminderMenu(store)
             Text(tr("არსებულ დავალებებს საკუთარი შეხსენების დრო უნარჩუნდება.","Existing tasks keep their own reminders."),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             FilledTonalButton(onClick=requestPermission) {Text(tr("ტელეფონის შეტყობინებების ჩართვა","Enable phone notifications"))}
-            Text(tr("Android-ის ენერგოდაზოგვის გამო შეტყობინება შეიძლება დაგვიანდეს; ზუსტი მაღვიძარის ნებართვას აპი არ ითხოვს.","Reminders can arrive later due to Android battery rules; exact alarms are not requested."),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("საქმის შეხსენება შეიძლება დაგვიანდეს ენერგოდაზოგვისას; ტაიმერისა და მაღვიძარისთვის ზუსტი დარეკვის ნებართვა ხელმისაწვდომია შესაბამის გვერდებზე.","Task reminders can be delayed by battery saving. Timer and alarm pages can request exact alarm access."),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Panel {
             SettingToggle(tr("ჩუმი საათები","Quiet hours"),store.quietEnabled,store::changeQuietEnabled)

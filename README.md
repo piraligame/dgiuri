@@ -1,4 +1,4 @@
-# დღიური (DGIURI) · Android Alpha 0.11
+# დღიური (DGIURI) · Android Alpha 0.12
 
 Offline-first Android daily planner by the PIRALI team. This is a **separate repository** from PIRALI and GEORGIA.
 
@@ -19,3 +19,9 @@ It is intended to update previously installed stable-signed Diary builds (matchi
 
 ## Signing
 No upload signing credentials or keystore are included in this repository. Release APK and AAB are built and signed on the authorized development laptop. Do not use default unsigned/CI builds as update packages.
+
+## Browser preview 0.12
+Open the preserved 0.10-style web UI with localized Clock, unlimited starred TOP tasks and year → month → day navigation:
+https://piraligame.github.io/pirali/diary-alpha12-webtest/index.html?v=12
+
+**Build status:** native 0.12 debug compilation passed. A release that updates existing stable-signed installs requires the original stable signing credentials, not the debug key. Do not upload unsigned AABs to Play.

@@ -149,7 +149,7 @@ class PlannerStore(private val context: Context) {
         val day = date.toString()
         if ((t.priorities[day] ?: 0) > 0) { updateTask(t.copy(priorities = t.priorities - day)); return true }
         val active = tasks.count { (it.priorities[day] ?: 0) > 0 && occurrence(it, date) }
-        if (active >= 3) return false
+        // User can star as many tasks as needed.
         val next = (tasks.filter { (it.priorities[day] ?: 0) > 0 && occurrence(it, date) }.maxOfOrNull { it.priorities[day] ?: 0 } ?: 0) + 1
         updateTask(t.copy(priorities = t.priorities + (day to next))); return true
     }

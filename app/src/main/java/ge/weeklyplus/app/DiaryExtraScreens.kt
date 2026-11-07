@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -51,8 +53,8 @@ import java.util.Locale
     }
     val s=((until-now+999)/1000).coerceAtLeast(0)
     val shown="%02d:%02d:%02d".format(Locale.US,s/3600,s/60%60,s%60)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(15.dp)) {
-        ExtraHeading("ტაიმერი / Timer","დროის უკუთვლა • ხმოვანი შეხსენება")
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(15.dp)) {
+        ExtraHeading(tr("ტაიმერი","Countdown timer"),tr("დროის უკუთვლა • ხმოვანი შეხსენება","Countdown • sound alert"))
         DiaryExactAlarmPermission()
         ExtraCard {
             Text(if(until>0)shown else "%02d:%02d:%02d".format(Locale.US,
@@ -61,27 +63,27 @@ import java.util.Locale
                 color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
             if(until==0L) {
                 Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    OutlinedTextField(hours,{hours=it.filter{c->c.isDigit()}.take(3)},label={Text("საათი")},
+                    OutlinedTextField(hours,{hours=it.filter{c->c.isDigit()}.take(3)},label={Text(tr("საათი","Hours"))},
                         singleLine=true,modifier=Modifier.weight(1f),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
-                    OutlinedTextField(minutes,{minutes=it.filter{c->c.isDigit()}.take(3)},label={Text("წუთი")},
+                    OutlinedTextField(minutes,{minutes=it.filter{c->c.isDigit()}.take(3)},label={Text(tr("წუთი","Minutes"))},
                         singleLine=true,modifier=Modifier.weight(1f),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
-                    OutlinedTextField(seconds,{seconds=it.filter{c->c.isDigit()}.take(3)},label={Text("წამი")},
+                    OutlinedTextField(seconds,{seconds=it.filter{c->c.isDigit()}.take(3)},label={Text(tr("წამი","Seconds"))},
                         singleLine=true,modifier=Modifier.weight(1f),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
                 }
                 if(error.isNotBlank())Text(error,color=MaterialTheme.colorScheme.error,fontSize=12.sp)
                 Button(onClick={
                     val value=(hours.toLongOrNull()?:0)*3600+(minutes.toLongOrNull()?:0)*60+(seconds.toLongOrNull()?:0)
-                    if(value !in 1..604800L)error="შეიყვანე დრო 1 წამიდან 7 დღემდე"
+                    if(value !in 1..604800L)error=tr("შეიყვანე დრო 1 წამიდან 7 დღემდე","Enter 1 second to 7 days")
                     else {DiaryClockScheduler.channel(context);DiaryClockScheduler.startTimer(context,value)
                         until=DiaryClockScheduler.timerUntil(context);now=System.currentTimeMillis()
                         error="";requestPermission()}
-                },modifier=Modifier.fillMaxWidth()){Text("დაწყება / Start")}
+                },modifier=Modifier.fillMaxWidth()){Text(tr("დაწყება","Start"))}
             } else {
                 Button(onClick={DiaryClockScheduler.cancelTimer(context);until=0},modifier=Modifier.fillMaxWidth()) {
-                    Text("გაუქმება / Cancel")
+                    Text(tr("გაუქმება","Cancel"))
                 }
             }
-            Text("უკუთვლა მუშაობს მაშინაც, როცა აპი დახურულია. ხმოვანი სიგნალისთვის ჩართე შეტყობინებები და ტელეფონის ხმა.",
+            Text(tr("უკუთვლა მუშაობს მაშინაც, როცა აპი დახურულია. ხმოვანი სიგნალისთვის ჩართე შეტყობინებები და ტელეფონის ხმა.","Timer continues in the background. Enable notifications and sound."),
                 fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -93,39 +95,50 @@ import java.util.Locale
     var minute by remember {mutableIntStateOf(DiaryClockScheduler.alarmMinute(context))}
     var label by remember {mutableStateOf(DiaryClockScheduler.alarmLabel(context))}
     var enabled by remember {mutableStateOf(DiaryClockScheduler.alarmEnabled(context))}
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(15.dp)) {
-        ExtraHeading("მაღვიძარა / Alarm","ყოველდღიური მაღვიძარა • დრო და სახელი")
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(15.dp)) {
+        ExtraHeading(tr("მაღვიძარა","Alarm clock"),tr("ყოველდღიური მაღვიძარა • დრო და სახელი","Daily alarm • time and name"))
         DiaryExactAlarmPermission()
         ExtraCard {
             Text("%02d:%02d".format(Locale.US,hour,minute),Modifier.fillMaxWidth(),textAlign=TextAlign.Center,
                 fontSize=42.sp,color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
             OutlinedButton(onClick={
                 TimePickerDialog(context,{_,h,m->hour=h;minute=m},hour,minute,true).show()
-            },modifier=Modifier.fillMaxWidth()){Text("საათის არჩევა")}
+            },modifier=Modifier.fillMaxWidth()){Text(tr("საათის არჩევა","Choose time"))}
             OutlinedTextField(label,{label=it.take(80)},modifier=Modifier.fillMaxWidth(),
-                label={Text("მაღვიძარის სახელი")},singleLine=true)
+                label={Text(tr("მაღვიძარის სახელი","Alarm name"))},singleLine=true)
             if(enabled){
-                Text("● მაღვიძარა ჩართულია",color=MaterialTheme.colorScheme.primary)
+                Text(tr("● მაღვიძარა ჩართულია","● Alarm enabled"),color=MaterialTheme.colorScheme.primary)
                 val next=DiaryClockScheduler.nextAlarmAt(context)
-                if(next>0)Text("შემდეგი: "+Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault())
+                if(next>0)Text(tr("შემდეგი: ","Next: ")+Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault())
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),fontSize=12.sp)
                 Button(onClick={DiaryClockScheduler.cancelDailyAlarm(context);enabled=false},modifier=Modifier.fillMaxWidth()){
-                    Text("გამორთვა")}
+                    Text(tr("გამორთვა","Disable"))}
             } else {
                 Button(onClick={DiaryClockScheduler.setDailyAlarm(context,hour,minute,label);enabled=true;requestPermission()},
-                    modifier=Modifier.fillMaxWidth()){Text("მაღვიძარის ჩართვა")}
+                    modifier=Modifier.fillMaxWidth()){Text(tr("მაღვიძარის ჩართვა","Enable alarm"))}
             }
-            Text("ყოველდღიურად დარეკავს არჩეულ საათზე. აპის შეტყობინებებზე ნებართვა აუცილებელია.",
+            Text(tr("ყოველდღიურად დარეკავს არჩეულ საათზე. აპის შეტყობინებებზე ნებართვა აუცილებელია.","Alarm rings daily at the chosen time. Notifications permission required."),
                 fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
+
+@Composable fun DiaryClockPage(requestPermission:()->Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        ExtraHeading(tr("საათი","Clock"),tr("ტაიმერი და მაღვიძარა","Timer and alarm"))
+        DiaryTimerPage(requestPermission)
+        DiaryAlarmPage(requestPermission)
+        Spacer(Modifier.height(22.dp))
+    }
+}
+
 @Composable fun DiaryThemeDropdown(store:PlannerStore) {
     var open by remember{mutableStateOf(false)}
-    val options=listOf(false to "☀ ღია",true to "☾ შავი / მუქი")
+    val options=listOf(false to tr("☀ ღია","☀ Light"),true to tr("☾ შავი / მუქი","☾ Black / Dark"))
     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-        Text("ეკრანის ფონი / Theme",Modifier.weight(1f),fontSize=14.sp)
+        Text(tr("ეკრანის ფონი","Screen theme"),Modifier.weight(1f),fontSize=14.sp)
         Box {
             OutlinedButton(onClick={open=true},contentPadding=PaddingValues(horizontal=12.dp,vertical=5.dp)){
                 Text(options.first{it.first==store.dark}.second,fontSize=12.sp);Text(" ▾")
@@ -140,12 +153,13 @@ import java.util.Locale
     }
 }
 
-@Composable private fun DiaryLink(icon:String,title:String,details:String,url:String,shade:Color) {
+@Composable private fun DiaryLink(icon:String,title:String,details:String,url:String,shade:Color,logo:Int?=null) {
     val uri=LocalUriHandler.current
     Row(Modifier.fillMaxWidth().clickable{runCatching{uri.openUri(url)}}.padding(vertical=6.dp),
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(11.dp)) {
         Box(Modifier.size(44.dp).background(shade,RoundedCornerShape(11.dp)),contentAlignment=Alignment.Center){
-            Text(icon,color=Color.White,fontSize=18.sp,fontWeight=FontWeight.ExtraBold)}
+            if(logo!=null) Image(painterResource(logo),contentDescription=title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
+            else Text(icon,color=Color.White,fontSize=18.sp,fontWeight=FontWeight.ExtraBold)}
         Column(Modifier.weight(1f)) {Text(title,fontSize=13.sp,fontWeight=FontWeight.Bold)
             Text(details,fontSize=10.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         Text("↗",fontSize=18.sp,color=MaterialTheme.colorScheme.primary)
@@ -153,14 +167,14 @@ import java.util.Locale
 }
 @Composable fun DiaryCommunityLinks() {
     Column(verticalArrangement=Arrangement.spacedBy(5.dp)) {
-        Text("ჩვენი საზოგადოება და თამაშები",fontWeight=FontWeight.Bold)
-        DiaryLink("GGG","Georgian Gamers Guild","Facebook • ჩვენი სათამაშო საზოგადოება",
-            "https://www.facebook.com/share/1FTD6S8ifN/",Color(0xFF1775AA))
-        DiaryLink("ფ","PIRALI • ფირალი","Google Play • მხოლოდ დაშვებული ტესტერებისთვის",
-            "https://play.google.com/apps/testing/ge.piraligame.pirali",Color(0xFF285D47))
-        DiaryLink("GE","GEORGIA: Narikala Defense","Google Play • მხოლოდ დაშვებული ტესტერებისთვის",
-            "https://play.google.com/apps/testing/com.piraligame.georgia",Color(0xFF9E4228))
-        Text("ტესტირების ბმულები ყველასთვის ჯერ არ არის ხელმისაწვდომი. საჭიროების შემთხვევაში შეიცვლება საჯარო ბმულებით.",
+        Text(tr("ჩვენი საზოგადოება და თამაშები","Our community and games"),fontWeight=FontWeight.Bold)
+        DiaryLink("GGG","Georgian Gamers Guild",tr("Facebook • ჩვენი სათამაშო საზოგადოება","Facebook • Our gaming community"),
+            "https://www.facebook.com/share/1FTD6S8ifN/",Color(0xFF1775AA),R.drawable.ggg_user_logo)
+        DiaryLink("ფ","PIRALI • ფირალი",tr("Google Play • მხოლოდ დაშვებული ტესტერებისთვის","Google Play • Approved testers only"),
+            "https://play.google.com/apps/testing/ge.piraligame.pirali",Color(0xFF285D47),R.drawable.pirali_store_logo)
+        DiaryLink("GE","GEORGIA: Narikala Defense",tr("Google Play • მხოლოდ დაშვებული ტესტერებისთვის","Google Play • Approved testers only"),
+            "https://play.google.com/apps/testing/com.piraligame.georgia",Color(0xFF9E4228),R.drawable.georgia_store_logo)
+        Text(tr("ტესტირების ბმულები ყველასთვის ჯერ არ არის ხელმისაწვდომი. საჭიროების შემთხვევაში შეიცვლება საჯარო ბმულებით.","Testing links are restricted until the games become public."),
             fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -270,8 +284,8 @@ import java.util.Locale
 
 @Composable fun DiaryReminderMenu(store:PlannerStore) {
     var open by remember{mutableStateOf(false)}
-    val options=listOf(-1 to "გამორთული",0 to "საქმის დაწყებისას",5 to "5 წუთით ადრე",
-        15 to "15 წუთით ადრე",30 to "30 წუთით ადრე",1440 to "1 დღით ადრე")
+    val options=listOf(-1 to tr("გამორთული","Off"),0 to tr("საქმის დაწყებისას","At task time"),5 to tr("5 წუთით ადრე","5 minutes early"),
+        15 to tr("15 წუთით ადრე","15 minutes early"),30 to tr("30 წუთით ადრე","30 minutes early"),1440 to tr("1 დღით ადრე","1 day before"))
     Box {
         OutlinedButton(onClick={open=true},modifier=Modifier.fillMaxWidth()){
             Text(options.firstOrNull{it.first==store.reminderDefault}?.second?:"გამორთული",Modifier.weight(1f))

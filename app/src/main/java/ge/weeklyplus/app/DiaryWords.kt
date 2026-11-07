@@ -157,6 +157,33 @@ Current entries will be replaced. Back them up first.|Текущие запис�
 Restore|Восстановить|恢复|Restaurar|Wiederherstellen|Restaurer
 Backup restored|Данные восстановлены|备份已恢复|Copia restaurada|Backup wiederhergestellt|Sauvegarde restaurée
 Invalid backup file|Неверный файл копии|无效的备份文件|Archivo de copia inválido|Ungültige Sicherungsdatei|Fichier de sauvegarde invalide
+
+Clock|Часы|时钟|Reloj|Uhr|Horloge
+Timer and alarm|Таймер и будильник|计时器和闹钟|Temporizador y alarma|Timer und Wecker|Minuteur et réveil
+Countdown timer|Таймер обратного отсчёта|倒计时器|Temporizador|Countdown|Minuteur
+Countdown • sound alert|Обратный отсчёт • звуковой сигнал|倒计时 • 声音提醒|Cuenta atrás • aviso sonoro|Countdown • Signalton|Compte à rebours • alerte sonore
+Daily alarm • time and name|Ежедневный будильник • время и название|每日闹钟 • 时间和名称|Alarma diaria • hora y nombre|Täglicher Wecker • Zeit und Name|Réveil quotidien • heure et nom
+Hours|Часы|小时|Horas|Stunden|Heures
+Seconds|Секунды|秒|Segundos|Sekunden|Secondes
+Enter 1 second to 7 days|Укажите время от 1 секунды до 7 дней|请输入 1 秒到 7 天|Indica de 1 segundo a 7 días|1 Sekunde bis 7 Tage eingeben|Indiquez de 1 seconde à 7 jours
+Timer continues in the background. Enable notifications and sound.|Таймер работает и при закрытом приложении. Включите уведомления и звук.|计时器在后台继续运行。请开启通知和声音。|El temporizador sigue activo en segundo plano. Activa avisos y sonido.|Der Timer läuft im Hintergrund. Aktiviere Benachrichtigungen und Ton.|Le minuteur continue en arrière-plan. Activez les notifications et le son.
+Alarm clock|Будильник|闹钟|Alarma|Wecker|Réveil
+Choose time|Выбрать время|选择时间|Elegir hora|Uhrzeit wählen|Choisir l’heure
+Alarm name|Название будильника|闹钟名称|Nombre de la alarma|Name des Weckers|Nom du réveil
+● Alarm enabled|● Будильник включён|● 闹钟已启用|● Alarma activada|● Wecker aktiv|● Réveil activé
+Next: |Следующий: |下次：|Próxima: |Nächster: |Prochain : 
+Disable|Выключить|关闭|Desactivar|Deaktivieren|Désactiver
+Enable alarm|Включить будильник|开启闹钟|Activar alarma|Wecker einschalten|Activer le réveil
+Alarm rings daily at the chosen time. Notifications permission required.|Будильник звонит каждый день в указанное время. Нужно разрешение на уведомления.|闹钟每天在设定时间响起。需要通知权限。|La alarma suena cada día a la hora elegida. Es necesario permitir las notificaciones.|Der Wecker klingelt täglich zur gewählten Zeit. Benachrichtigungen müssen erlaubt sein.|Le réveil sonne chaque jour à l’heure choisie. Autorisez les notifications.
+Our community and games|Наше сообщество и игры|我们的社区和游戏|Nuestra comunidad y juegos|Unsere Community und Spiele|Notre communauté et nos jeux
+Facebook • Our gaming community|Facebook • Наше игровое сообщество|Facebook • 我们的游戏社区|Facebook • Nuestra comunidad de jugadores|Facebook • Unsere Gaming-Community|Facebook • Notre communauté de joueurs
+Google Play • Approved testers only|Google Play • Только для допущенных тестировщиков|Google Play • 仅限获准测试者|Google Play • Solo para probadores autorizados|Google Play • Nur für zugelassene Tester|Google Play • Réservé aux testeurs autorisés
+Testing links are restricted until the games become public.|Тестовые ссылки доступны только приглашённым до публичного выпуска.|游戏公开发布前，测试链接仅限受邀者使用。|Los enlaces de prueba están restringidos hasta el lanzamiento público.|Testlinks sind bis zur Veröffentlichung beschränkt.|Les liens de test sont réservés avant la sortie publique.
+Screen theme|Тема экрана|屏幕主题|Tema de pantalla|Bildschirmdesign|Thème de l’écran
+☀ Light|☀ Светлая|☀ 浅色|☀ Claro|☀ Hell|☀ Clair
+☾ Black / Dark|☾ Чёрная / Тёмная|☾ 黑色 / 深色|☾ Negro / Oscuro|☾ Schwarz / Dunkel|☾ Noir / Sombre
+Star as many tasks as you wish.|Отмечайте звёздочкой сколько угодно задач.|可以为任意数量的任务加星标。|Marca con estrellas tantas tareas como quieras.|Markiere beliebig viele Aufgaben mit einem Stern.|Marquez autant de tâches que vous le souhaitez.
+Joker|Джокер|小丑牌|Joker|Joker|Joker
     """.trimIndent().lineSequence().filter { it.isNotBlank() }.mapNotNull { line ->
         val parts = line.split('|')
         if (parts.size == 6) parts[0] to parts.drop(1) else null
