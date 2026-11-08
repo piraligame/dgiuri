@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
@@ -98,8 +99,7 @@ private fun WeeklyApp() {
                     modifier = Modifier.weight(1f),
                     containerColor = MaterialTheme.colorScheme.background,
                     bottomBar = { if (!tablet) Surface(color=MaterialTheme.colorScheme.surface) {
-                        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement=Arrangement.spacedBy(2.dp)) { NavItems(page,lang) { page=it } }
+                        NavItems(page, lang) { page = it }
                     } },
                     snackbarHost = { if (notice.isNotEmpty()) SnackbarHost(hostState = remember { SnackbarHostState() }) }
                 ) { insets ->
@@ -111,7 +111,7 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.16", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.17", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
                             Surface(color=Mint,shape=RoundedCornerShape(12.dp)) {
@@ -156,18 +156,30 @@ private fun NavItems(current:String, english:Boolean, onChange:(String)->Unit) {
     val tabs = listOf(Triple("list","☑",tr("სია","List")),Triple("home","⌂",tr("დღეს","Today")),
         Triple("calendar","▦",tr("კალენდარი","Calendar")),Triple("insights","▥",tr("შედეგები","Results")),
         Triple("other","⊞",tr("სხვა","Other")),Triple("settings","⚙",tr("პარამეტრები","Settings")))
-    tabs.forEach { (key,icon,label) ->
-        val selected = if(current in listOf("joker","clock","mydiary")) key=="other" else current==key
-        // NavigationBarItem is only used inside NavigationBar; NavigationRailItem works only inside NavigationRail.
-        // Plain clickable nav item works reliably in both normal and wide layouts.
-        Column(
-            modifier=Modifier.width(52.dp).clickable {onChange(key)}.padding(vertical=7.dp,horizontal=1.dp),
-            horizontalAlignment=Alignment.CenterHorizontally
-        ) {
-            Surface(color=if(selected) Mint else Color.Transparent, shape=RoundedCornerShape(20.dp)) {
-                Text(icon,Modifier.padding(horizontal=7.dp,vertical=4.dp),fontSize=20.sp,color=if(selected) Pine else MaterialTheme.colorScheme.onSurface)
+    // Every item uses exactly one sixth of available width. No horizontal scrolling.
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val compact = maxWidth < 385.dp
+        Row(Modifier.fillMaxWidth().padding(horizontal=2.dp)) {
+            tabs.forEach { (key,icon,label) ->
+                val selected = if(current in listOf("joker","clock","mydiary")) key=="other" else current==key
+                val visibleLabel = if (compact && key=="settings") tr("პარამ.","Settings") else label
+                Column(
+                    modifier=Modifier.weight(1f).heightIn(min=56.dp)
+                        .clickable { onChange(key) }
+                        .padding(vertical=5.dp,horizontal=1.dp),
+                    horizontalAlignment=Alignment.CenterHorizontally,
+                    verticalArrangement=Arrangement.Center
+                ) {
+                    Surface(color=if(selected) Mint else Color.Transparent, shape=RoundedCornerShape(20.dp)) {
+                        Text(icon,Modifier.padding(horizontal=7.dp,vertical=3.dp),fontSize=19.sp,
+                            color=if(selected) Pine else MaterialTheme.colorScheme.onSurface)
+                    }
+                    Text(visibleLabel,fontSize=if(compact) 8.sp else 9.sp,
+                        fontWeight=if(selected) FontWeight.Bold else FontWeight.Normal,
+                        textAlign=TextAlign.Center, maxLines=1, overflow=TextOverflow.Ellipsis,
+                        color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
-            Text(label,fontSize=8.sp,fontWeight=if(selected) FontWeight.Bold else FontWeight.Normal,maxLines=1,color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -210,6 +222,7 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
     val today = store.tasks.filter {occurrence(it,date)}.sortedWith(compareBy({if(it.time.isBlank())"99:99" else it.time},{it.title}))
         var filter by remember { mutableStateOf("all") }
     var quickTitle by remember(date) { mutableStateOf("") }
+    var hourlyExpanded by rememberSaveable { mutableStateOf(false) }
     var sort by remember { mutableStateOf("time") }
     val overdue = store.tasks.filter { task ->
         task.repeat == "none" && runCatching { LocalDate.parse(task.date).isBefore(LocalDate.now()) }.getOrDefault(false) && !task.completed.contains(task.date)
@@ -247,10 +260,14 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
             }
         }
         Panel {
-            Row(verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clickable { hourlyExpanded = !hourlyExpanded }.padding(vertical=4.dp),
+                verticalAlignment=Alignment.CenterVertically) {
                 Text(tr("საათობრივი განრიგი","Hourly schedule"),fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
                 Text("${today.count {taskComplete(it,date)}}/${today.size}",color=Pine,fontWeight=FontWeight.Bold)
+                Spacer(Modifier.width(12.dp))
+                Text(if(hourlyExpanded) "⌃" else "⌄",fontSize=22.sp,color=MaterialTheme.colorScheme.primary)
             }
+            if (hourlyExpanded) {
             if(today.isNotEmpty()) {
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                     Text(tr("დალაგება:","Sort:"),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -268,6 +285,7 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
             if(shown.isEmpty()) {
                 Text(if(today.isEmpty()) (tr("ამ დღისთვის საქმე ჯერ არ არის. დაამატე პირველი გეგმა!","No tasks yet. Make your first plan!")) else (tr("ამ ფილტრში საქმე ვერ მოიძებნა","No matches for this filter")),color=MaterialTheme.colorScheme.onSurfaceVariant,fontSize=13.sp)
             } else shown.forEach { t -> TaskRow(t,date,store,onEdit,onInfo) }
+            }
         }
         if(date==LocalDate.now()) {
             val tomorrow=date.plusDays(1)
