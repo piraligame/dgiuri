@@ -10,8 +10,8 @@ android {
         applicationId = "ge.weeklyplus.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.15-alpha"
+        versionCode = 8
+        versionName = "0.16-alpha"
     }
     signingConfigs {
         create("diaryStable") {
@@ -21,10 +21,17 @@ android {
             keyPassword = System.getenv("DGIURI_KEY_PASSWORD") ?: ""
         }
     }
-    buildTypes { release {
-        isMinifyEnabled = false
-        signingConfig = signingConfigs.getByName("diaryStable")
-    } }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("diaryStable")
+        }
+        debug {
+            // The test build installs alongside the existing Play-signed Diary.
+            applicationIdSuffix = ".test"
+            versionNameSuffix = "-TEST"
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

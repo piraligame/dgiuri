@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -20,7 +21,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-data class ListEntry(val id:String,val title:String,val done:Boolean=false,val updatedAt:Long=System.currentTimeMillis())
+data class ListEntry(val id:String,val title:String,val done:Boolean=false,val updatedAt:Long=System.currentTimeMillis(),val pinned:Boolean=false,val pinOrder:Long=0L)
 data class JournalEntry(val id:String,val title:String,val body:String,val createdAt:Long,val updatedAt:Long)
 
 class DiaryModules15(context:Context) {
@@ -32,7 +33,7 @@ class DiaryModules15(context:Context) {
             val a=JSONArray(prefs.getString("list","[]")?:"[]")
             for(i in 0 until a.length()){
                 val j=a.getJSONObject(i)
-                list.add(ListEntry(j.getString("id"),j.getString("title"),j.optBoolean("done"),j.optLong("updatedAt")))
+                list.add(ListEntry(j.getString("id"),j.getString("title"),j.optBoolean("done"),j.optLong("updatedAt"),j.optBoolean("pinned",false),j.optLong("pinOrder",0L)))
             }
             val b=JSONArray(prefs.getString("notes","[]")?:"[]")
             for(i in 0 until b.length()){
@@ -43,7 +44,7 @@ class DiaryModules15(context:Context) {
     }
     private fun save() {
         val l=JSONArray();list.forEach { e->l.put(JSONObject().apply{
-            put("id",e.id);put("title",e.title);put("done",e.done);put("updatedAt",e.updatedAt)
+            put("id",e.id);put("title",e.title);put("done",e.done);put("updatedAt",e.updatedAt);put("pinned",e.pinned);put("pinOrder",e.pinOrder)
         }) }
         val j=JSONArray();notes.forEach { e->j.put(JSONObject().apply{
             put("id",e.id);put("title",e.title);put("body",e.body);put("createdAt",e.createdAt);put("updatedAt",e.updatedAt)
@@ -53,6 +54,14 @@ class DiaryModules15(context:Context) {
     fun addList(s:String){if(s.isBlank())return;list.add(0,ListEntry(UUID.randomUUID().toString(),s.trim().take(200)));save()}
     fun toggle(id:String){val i=list.indexOfFirst{it.id==id};if(i>=0){list[i]=list[i].copy(done=!list[i].done,updatedAt=System.currentTimeMillis());save()}}
     fun edit(id:String,s:String){val i=list.indexOfFirst{it.id==id};if(i>=0&&s.isNotBlank()){list[i]=list[i].copy(title=s.trim().take(200),updatedAt=System.currentTimeMillis());save()}}
+    fun pin(id:String){
+        val i=list.indexOfFirst{it.id==id}
+        if(i<0)return
+        val current=list[i]
+        val next=(list.maxOfOrNull{it.pinOrder}?:0L)+1L
+        list[i]=current.copy(pinned=!current.pinned,pinOrder=if(current.pinned)0L else next,updatedAt=System.currentTimeMillis())
+        save()
+    }
     fun remove(id:String){list.removeAll{it.id==id};save()}
     fun saveNote(id:String?,title:String,body:String){
         if(body.isBlank())return
@@ -74,6 +83,7 @@ class DiaryModules15(context:Context) {
     var editText by remember {mutableStateOf("")}
     var deleting by remember {mutableStateOf<ListEntry?>(null)}
     val shown=model.list.filter{filter=="all"||(filter=="open"&&!it.done)||(filter=="done"&&it.done)}
+        .sortedWith(compareByDescending<ListEntry>{it.pinned}.thenByDescending{if(it.pinned)it.pinOrder else 0L})
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text(tr("☑ საერთო სია","☑ General list"),fontSize=25.sp,fontWeight=FontWeight.Bold)
         Text(tr("შესრულებული საქმეები წითლად გადაიხაზება","Completed items are crossed out in red"),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -99,6 +109,11 @@ class DiaryModules15(context:Context) {
                         Text(e.title,Modifier.weight(1f),fontSize=13.sp,
                             textDecoration=if(e.done)TextDecoration.LineThrough else TextDecoration.None,
                             color=if(e.done)Color(0xFFE55263) else MaterialTheme.colorScheme.onSurface)
+                        Text(
+                            "📌",
+                            Modifier.clickable{model.pin(e.id)}.padding(8.dp).alpha(if(e.pinned)1f else .32f),
+                            fontSize=18.sp,color=MaterialTheme.colorScheme.primary
+                        )
                         Text("✎",Modifier.clickable{editing=e;editText=e.title}.padding(8.dp),fontSize=15.sp)
                         Text("×",Modifier.clickable{deleting=e}.padding(8.dp),fontSize=17.sp,color=MaterialTheme.colorScheme.error)
                     }

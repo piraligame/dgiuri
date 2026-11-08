@@ -75,7 +75,6 @@ private fun WeeklyApp() {
     var creating by remember { mutableStateOf(false) }
     
     var notice by remember { mutableStateOf("") }
-    var search by remember { mutableStateOf("") }
     var categoryFilter by remember { mutableStateOf("all") }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         notice = if (granted) tr("შეტყობინებები ჩართულია","Notifications enabled") else tr("შეტყობინებებზე ნებართვა არ გაიცა","Notification permission denied")
@@ -112,7 +111,7 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.15", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.16", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
                             Surface(color=Mint,shape=RoundedCornerShape(12.dp)) {
@@ -209,17 +208,14 @@ private fun DateStrip(date:LocalDate,onDate:(LocalDate)->Unit,lang:Boolean,mode:
 private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Unit,onAdd:()->Unit,onEdit:(PlanTask)->Unit,onInfo:(String)->Unit) {
     val lang=store.english
     val today = store.tasks.filter {occurrence(it,date)}.sortedWith(compareBy({if(it.time.isBlank())"99:99" else it.time},{it.title}))
-    val top = today.filter {(it.priorities[date.toString()] ?: 0)>0}.sortedBy {it.priorities[date.toString()] ?: 0}
-    var query by remember { mutableStateOf("") }
-    var filter by remember { mutableStateOf("all") }
+        var filter by remember { mutableStateOf("all") }
     var quickTitle by remember(date) { mutableStateOf("") }
     var sort by remember { mutableStateOf("time") }
     val overdue = store.tasks.filter { task ->
         task.repeat == "none" && runCatching { LocalDate.parse(task.date).isBefore(LocalDate.now()) }.getOrDefault(false) && !task.completed.contains(task.date)
     }.sortedBy { it.date }
     val shown = today.filter { t ->
-        (query.isBlank() || t.title.contains(query,ignoreCase=true) || t.details.contains(query,ignoreCase=true)) &&
-            (filter=="all" || (filter=="done" && taskComplete(t,date)) || (filter=="open" && !taskComplete(t,date)))
+        (filter=="all" || (filter=="done" && taskComplete(t,date)) || (filter=="open" && !taskComplete(t,date)))
     }.let { list -> when(sort) {
         "name" -> list.sortedBy { it.title.lowercase(DiaryWords.locale()) }
         "status" -> list.sortedWith(compareBy({taskComplete(it,date)},{it.time.ifBlank { "99:99" }}))
@@ -250,27 +246,6 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
                 }
             }
         }
-        Surface(shape=MaterialShape,color=if(store.dark) Color(0xFF254538) else Mint,modifier=Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment=Alignment.CenterVertically) {
-                    Text("★  TOP",fontWeight=FontWeight.Bold,color=if(store.dark)Color.White else DarkPine,modifier=Modifier.weight(1f))
-                    Text("${top.size}",color=Pine,fontWeight=FontWeight.Bold)
-                }
-                if(top.isEmpty()) Text(tr("დააჭირე ვარსკვლავს ნებისმიერ საქმეზე — რაოდენობა შეუზღუდავია.","Star as many tasks as you wish."),fontSize=12.sp,color=if(store.dark)Color.White else DarkPine)
-                top.forEachIndexed { i,t ->
-                    Surface(color=MaterialTheme.colorScheme.surface, shape=RoundedCornerShape(12.dp)) {
-                        Row(Modifier.fillMaxWidth().padding(10.dp),verticalAlignment=Alignment.CenterVertically) {
-                            Text("${i+1}.",color=Pine,fontWeight=FontWeight.Bold)
-                            Spacer(Modifier.width(10.dp))
-                            Text(t.title,Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis,fontWeight=FontWeight.SemiBold)
-                            Text(if(taskComplete(t,date))"✓" else "",color=Pine)
-                            Text("▲",Modifier.clickable {store.movePriority(t,date,-1)}.padding(7.dp),color=Pine,fontSize=12.sp)
-                            Text("▼",Modifier.clickable {store.movePriority(t,date,1)}.padding(7.dp),color=Pine,fontSize=12.sp)
-                        }
-                    }
-                }
-            }
-        }
         Panel {
             Row(verticalAlignment=Alignment.CenterVertically) {
                 Text(tr("საათობრივი განრიგი","Hourly schedule"),fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
@@ -284,7 +259,6 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
                     }
                 }
                 LinearProgressIndicator(progress={today.count {taskComplete(it,date)}.toFloat()/today.size},modifier=Modifier.fillMaxWidth().height(6.dp),color=Pine,trackColor=Mint)
-                OutlinedTextField(value=query,onValueChange={query=it},label={Text(tr("საქმის ძიება","Search tasks"))},singleLine=true,modifier=Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                     listOf("all" to (tr("ყველა","All")),"open" to (tr("გასაკეთებელი","To do")),"done" to (tr("შესრულებული","Done"))).forEach { (id,label)->
                         FilterChip(selected=filter==id,onClick={filter=id},label={Text(label,fontSize=11.sp)})

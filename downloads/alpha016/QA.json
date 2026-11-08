@@ -1,0 +1,16 @@
+{
+  "status": "BUILT_AND_SIGNATURE_VALID",
+  "edition": "TEST ONLY - not the Google Play update",
+  "package": "ge.weeklyplus.app.test",
+  "versionCode": 8,
+  "versionName": "0.16-alpha-TEST",
+  "sha256": "a92bac888bde98cc4cc96449850830cfe0c0030719694c0bbf9e7639b7836a71",
+  "apkBytes": 12505101,
+  "pinFields": [
+    "pinned",
+    "pinOrder"
+  ],
+  "canCoexistWithPlay": true,
+  "playReleaseSigned": false,
+  "playStoreUploaded": false
+}
