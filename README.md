@@ -25,3 +25,26 @@ Open the preserved 0.10-style web UI with localized Clock, unlimited starred TOP
 https://piraligame.github.io/pirali/diary-alpha12-webtest/index.html?v=12
 
 **Build status:** native 0.12 debug compilation passed. A release that updates existing stable-signed installs requires the original stable signing credentials, not the debug key. Do not upload unsigned AABs to Play.
+
+
+## Alpha 0.15 (2026-11-08)
+
+Native Android package ge.weeklyplus.app, versionCode 7, versionName 0.15-alpha,
+signed for Google Play updates with the original weeklyplus upload certificate
+held securely off-repository.
+
+- Add separate checklist with red completed strike-through, open/done/all filters.
+- Add native personal journal with creation/edit timestamps and history.
+- Reorganize bottom navigation to List, Today, Calendar, Results, Other, Settings.
+- In Other: Diary, Joker, Clock. Results includes checklist completion.
+- 7 app accent choices, calendar year dropdown, unlimited TOP stars.
+- Backups include planner, checklist, journal and Joker datasets.
+- Alarm and timers use Android OS alarm notification/channel as before.
+
+**Important:** Google authentication is on the linked web player
+https://piraligame.github.io/pirali/diary-alpha15-webtest/index.html?v=15 .
+The native Android data and browser cloud data are still separate.
+Do not claim native cloud sync until a dedicated integrated sign-in/reconciliation
+implementation is built and tested. Browser page is opened via an external intent.
+
+No .jks, passwords, or private credentials are stored in the repository.

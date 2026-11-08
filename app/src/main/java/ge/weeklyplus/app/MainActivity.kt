@@ -57,13 +57,19 @@ class MainActivity : ComponentActivity() {
 private fun WeeklyApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val store = remember { PlannerStore(context.applicationContext) }
+    val modules = remember { DiaryModules15(context.applicationContext) }
     LaunchedEffect(store.onboarded) { if (!store.onboarded) store.finishOnboarding() }
     DiaryWords.code = store.language
     val lang = store.english
-    val colors = if (store.dark) darkColorScheme(primary = Color(0xFF79D9AF), secondary = Color(0xFF9BCDB5), background = Color(0xFF090D0C), surface = Color(0xFF17211D), surfaceVariant = Color(0xFF26362E))
-        else lightColorScheme(primary = Pine, secondary = DarkPine, background = OffWhite, surface = Color.White, surfaceVariant = Mint)
-    var page by remember { mutableStateOf("home") }
-    var view by remember { mutableStateOf("day") }
+    val accent = when(store.accent) {
+        "purple"->Color(0xFF8559AD);"blue"->Color(0xFF3179BF);"rose"->Color(0xFFB44D80)
+        "amber"->Color(0xFFB17C27);"cyan"->Color(0xFF109BA0);"slate"->Color(0xFF586575)
+        else->Pine
+    }
+    val colors = if (store.dark) darkColorScheme(primary = accent, secondary = accent, background = Color(0xFF090D0C), surface = Color(0xFF17211D), surfaceVariant = Color(0xFF26362E))
+        else lightColorScheme(primary = accent, secondary = accent, background = OffWhite, surface = Color.White, surfaceVariant = Mint)
+    var page by remember { mutableStateOf("list") }
+    var view by remember { mutableStateOf("month") }
     var date by remember { mutableStateOf(LocalDate.now()) }
     var editing by remember { mutableStateOf<PlanTask?>(null) }
     var creating by remember { mutableStateOf(false) }
@@ -80,7 +86,7 @@ private fun WeeklyApp() {
     }
     MaterialTheme(colorScheme = colors, typography = Typography()) {
         BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            val tablet = maxWidth >= 650.dp
+            val tablet = false // Stable six-button bottom menu on foldable/mobile.
             Row(Modifier.fillMaxSize()) {
                 if (tablet) {
                     NavigationRail(containerColor = MaterialTheme.colorScheme.surface) {
@@ -106,7 +112,7 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.12", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.15", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
                             Surface(color=Mint,shape=RoundedCornerShape(12.dp)) {
@@ -119,11 +125,20 @@ private fun WeeklyApp() {
                         }
                         Box(Modifier.weight(1f).widthIn(max=940.dp).fillMaxWidth()) {
                             when(page) {
+                                "list" -> DgiuriListPage(modules)
                                 "home" -> HomeScreen(store,date,{date=it}, { creating=true }, { editing=it }, { notice=it })
                                 "calendar" -> CalendarScreen(store,date,{date=it},view,{view=it},{creating=true},{editing=it},{notice=it})
-                                "joker" -> DiaryJokerPage()
-                                "clock" -> DiaryClockPage(::askPermission)
-                                "insights" -> InsightsScreen(store)
+                                "insights" -> InsightsScreen(store,modules)
+                                "other" -> DgiuriOtherPage { page=it }
+                                "mydiary" -> DgiuriJournalPage(modules) { page="other" }
+                                "joker" -> Column(Modifier.fillMaxSize()) {
+                                    TextButton(onClick={page="other"}){Text("‹ "+tr("სხვა","Other"))}
+                                    Box(Modifier.weight(1f)){DiaryJokerPage()}
+                                }
+                                "clock" -> Column(Modifier.fillMaxSize()) {
+                                    TextButton(onClick={page="other"}){Text("‹ "+tr("სხვა","Other"))}
+                                    Box(Modifier.weight(1f)){DiaryClockPage(::askPermission)}
+                                }
                                 "settings" -> SettingsScreen(store,::askPermission) { notice=it }
                             }
                         }
@@ -139,21 +154,21 @@ private fun WeeklyApp() {
 
 @Composable
 private fun NavItems(current:String, english:Boolean, onChange:(String)->Unit) {
-    val tabs = listOf(Triple("home","⌂",tr("დღეს","Today")),Triple("calendar","▦",tr("კალენდარი","Calendar")),
-        Triple("joker","♠",tr("ჯოკერი","Joker")),Triple("clock","⏱",tr("საათი","Clock")),
-        Triple("insights","▥",tr("შედეგები","Results")),Triple("settings","⚙",tr("პარამეტრები","Settings")))
+    val tabs = listOf(Triple("list","☑",tr("სია","List")),Triple("home","⌂",tr("დღეს","Today")),
+        Triple("calendar","▦",tr("კალენდარი","Calendar")),Triple("insights","▥",tr("შედეგები","Results")),
+        Triple("other","⊞",tr("სხვა","Other")),Triple("settings","⚙",tr("პარამეტრები","Settings")))
     tabs.forEach { (key,icon,label) ->
-        val selected = current==key
+        val selected = if(current in listOf("joker","clock","mydiary")) key=="other" else current==key
         // NavigationBarItem is only used inside NavigationBar; NavigationRailItem works only inside NavigationRail.
         // Plain clickable nav item works reliably in both normal and wide layouts.
         Column(
-            modifier=Modifier.padding(horizontal=3.dp).clickable {onChange(key)}.padding(vertical=7.dp,horizontal=3.dp),
+            modifier=Modifier.width(52.dp).clickable {onChange(key)}.padding(vertical=7.dp,horizontal=1.dp),
             horizontalAlignment=Alignment.CenterHorizontally
         ) {
             Surface(color=if(selected) Mint else Color.Transparent, shape=RoundedCornerShape(20.dp)) {
-                Text(icon,Modifier.padding(horizontal=15.dp,vertical=4.dp),fontSize=22.sp,color=if(selected) Pine else MaterialTheme.colorScheme.onSurface)
+                Text(icon,Modifier.padding(horizontal=7.dp,vertical=4.dp),fontSize=20.sp,color=if(selected) Pine else MaterialTheme.colorScheme.onSurface)
             }
-            Text(label,fontSize=9.sp,fontWeight=if(selected) FontWeight.Bold else FontWeight.Normal,maxLines=1,color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(label,fontSize=8.sp,fontWeight=if(selected) FontWeight.Bold else FontWeight.Normal,maxLines=1,color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -323,15 +338,21 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Heading(tr("კალენდარი","Calendar"),tr("ნახე დღე, კვირა და თვე","See your plans at a glance"), "＋") {onAdd()}
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            listOf("day","week","month","year").forEachIndexed { index,v ->
-                SegmentedButton(selected=view==v,onClick={onView(v)},shape=SegmentedButtonDefaults.itemShape(index,4)) {
-                    Text(when(v){"day"->tr("დღე","Day");"week"->tr("კვირა","Week");"month"->tr("თვე","Month");else->tr("წელი","Year")},fontSize=11.sp)
+            listOf("day","week","month").forEachIndexed { index,v ->
+                SegmentedButton(selected=view==v,onClick={onView(v)},shape=SegmentedButtonDefaults.itemShape(index,3)) {
+                    Text(when(v){"day"->tr("დღე","Day");"week"->tr("კვირა","Week");else->tr("თვე","Month")},fontSize=11.sp)
                 }
             }
         }
         DateStrip(date,onDate,lang,view)
-        if(view=="year") {
-            YearCalendar(store,date,onDate,onView)
+        var yearsOpen by remember { mutableStateOf(false) }
+        Box {
+            OutlinedButton(onClick={yearsOpen=true}){Text(date.year.toString()+" ▾",fontSize=12.sp)}
+            DropdownMenu(expanded=yearsOpen,onDismissRequest={yearsOpen=false}) {
+                (2020..2045).forEach {y->
+                    DropdownMenuItem(text={Text(y.toString())},onClick={onDate(date.withYear(y));yearsOpen=false})
+                }
+            }
         }
         if(view=="week") {
             val start=date.minusDays((date.dayOfWeek.value-1).toLong())
@@ -438,13 +459,13 @@ private fun GoalsScreen(store:PlannerStore,onAdd:()->Unit,onEditTask:(PlanTask)-
 }
 
 @Composable
-private fun InsightsScreen(store:PlannerStore) {
+private fun InsightsScreen(store:PlannerStore, modules:DiaryModules15) {
     val lang=store.english
     val end=LocalDate.now(); val start=end.minusDays(6)
     val days=(0..6).map {start.plusDays(it.toLong())}
     val total=days.sumOf {date->store.tasks.count {occurrence(it,date)}}
     val done=days.sumOf {date->store.tasks.count {occurrence(it,date)&&taskComplete(it,date)}}
-    val ratio=if(total==0)0 else (100*done/total)
+    val ratio=if(total+modules.total==0)0 else (100*(done+modules.done)/(total+modules.total))
     val monthStart=end.withDayOfMonth(1)
     val monthDays=(0 until end.dayOfMonth).map { monthStart.plusDays(it.toLong()) }
     val monthTotal=monthDays.sumOf { d->store.tasks.count {occurrence(it,d)} }
@@ -454,7 +475,7 @@ private fun InsightsScreen(store:PlannerStore) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Heading(tr("ჩემი შედეგები","My results"),tr("ბოლო 7 დღე","Last 7 days"))
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            listOf((tr("შესრულებულია","Completed")) to "$done", (tr("შესრულება","Completion")) to "$ratio%").forEach { (label,value)->
+            listOf((tr("შესრულებულია","Completed")) to (done+modules.done).toString(), (tr("შესრულება","Completion")) to "$ratio%").forEach { (label,value)->
                 Surface(shape=MaterialShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.weight(1f)) {
                     Column(Modifier.padding(15.dp)) { Text(value,fontSize=29.sp,color=Pine,fontWeight=FontWeight.Bold);Text(label,fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
@@ -489,6 +510,10 @@ private fun InsightsScreen(store:PlannerStore) {
             }
         }
         Panel {
+            Text(tr("საერთო სია","General list"),fontWeight=FontWeight.Bold)
+            Text(modules.done.toString()+"/"+modules.total.toString(),color=MaterialTheme.colorScheme.primary)
+        }
+        Panel {
             Text(tr("კვირის შეჯამება","Your week"),fontWeight=FontWeight.Bold)
             Text(if(total==0) (tr("დაამატე დავალებები და შედეგებიც აქ გამოჩნდება.","Add tasks to start seeing results.")) else (DiaryWords.weekSummary(done,total)),fontSize=13.sp)
         }
@@ -519,6 +544,8 @@ private fun SettingsScreen(store:PlannerStore,requestPermission:()->Unit,onInfo:
             HorizontalDivider()
             DiaryLanguageDropdown(store)
         }
+        Panel { DgiuriAccentSelector(store) }
+        Panel { DgiuriGoogleWebLogin() }
         Panel {
             Text(tr("შეხსენების ნაგულისხმევი რეჟიმი","Reminder defaults"),fontWeight=FontWeight.Bold)
             DiaryReminderMenu(store)

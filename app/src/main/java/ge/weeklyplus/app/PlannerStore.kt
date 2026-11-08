@@ -51,6 +51,7 @@ class PlannerStore(private val context: Context) {
     val tasks = mutableStateListOf<PlanTask>()
     val goals = mutableStateListOf<PlanGoal>()
     var dark by mutableStateOf(prefs.getBoolean("dark", false)); private set
+    var accent by mutableStateOf(prefs.getString("accent_name","green") ?: "green"); private set
     var language by mutableStateOf((prefs.getString("language",null) ?: if(prefs.getBoolean("english",false)) "en" else "ka").takeIf { it in DiaryWords.languages.map { p -> p.first } } ?: "ka"); private set
     val english get() = language != "ka"
     var reminderDefault by mutableIntStateOf(prefs.getInt("reminder_default", -1)); private set
@@ -103,6 +104,15 @@ class PlannerStore(private val context: Context) {
         put("exportedAt",java.time.Instant.now().toString())
         put("tasks",JSONArray(prefs.getString("tasks","[]") ?: "[]"))
         put("goals",JSONArray(prefs.getString("goals","[]") ?: "[]"))
+        val modules=context.getSharedPreferences("diary_native_modules_015",Context.MODE_PRIVATE)
+        put("list",JSONArray(modules.getString("list","[]") ?: "[]"))
+        put("notes",JSONArray(modules.getString("notes","[]") ?: "[]"))
+        val j=context.getSharedPreferences("diary_joker_v2",Context.MODE_PRIVATE)
+        put("joker",JSONObject().apply {
+            put("names",JSONArray(j.getString("names","[]") ?: "[]"))
+            put("rounds",JSONArray(j.getString("rounds","[]") ?: "[]"))
+            put("matches",JSONArray(j.getString("matches","[]") ?: "[]"))
+        })
         put("settings",JSONObject().apply {
             put("language",language);put("dark",dark);put("reminder_default",reminderDefault)
             put("quiet_enabled",quietEnabled);put("quiet_start",quietStart);put("quiet_end",quietEnd)
@@ -128,6 +138,17 @@ class PlannerStore(private val context: Context) {
             .putString("quiet_start",opts.optString("quiet_start",quietStart))
             .putString("quiet_end",opts.optString("quiet_end",quietEnd))
             .commit()
+        val mPrefs=context.getSharedPreferences("diary_native_modules_015",Context.MODE_PRIVATE)
+        val extras=mPrefs.edit()
+        if(json.has("list"))extras.putString("list",json.getJSONArray("list").toString())
+        if(json.has("notes"))extras.putString("notes",json.getJSONArray("notes").toString())
+        extras.commit()
+        if(json.has("joker")) {
+            val o=json.getJSONObject("joker")
+            val jp=context.getSharedPreferences("diary_joker_v2",Context.MODE_PRIVATE).edit()
+            for(key in listOf("names","rounds","matches"))if(o.has(key))jp.putString(key,o.getJSONArray(key).toString())
+            jp.commit()
+        }
         tasks.clear();goals.clear();load()
         dark=prefs.getBoolean("dark",false)
         language=prefs.getString("language","ka") ?: "ka";DiaryWords.code=language
@@ -166,6 +187,7 @@ class PlannerStore(private val context: Context) {
     fun addGoal(g: PlanGoal) { goals.add(g); save() }
     fun deleteGoal(id: String) { goals.removeAll { it.id == id }; for (i in tasks.indices) { if (tasks[i].goalId == id) tasks[i] = tasks[i].copy(goalId = "") }; persistAndReschedule() }
     fun changeDark(v: Boolean) { dark=v; prefs.edit().putBoolean("dark",v).apply() }
+    fun changeAccent(value:String){if(value in listOf("green","purple","blue","rose","amber","cyan","slate")){accent=value;prefs.edit().putString("accent_name",value).apply()}}
     fun changeLanguage(code:String) {
         if(code !in DiaryWords.languages.map {it.first}) return
         language=code

@@ -10,8 +10,8 @@ android {
         applicationId = "ge.weeklyplus.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.12-alpha"
+        versionCode = 7
+        versionName = "0.15-alpha"
     }
     signingConfigs {
         create("diaryStable") {
