@@ -1,23 +1,24 @@
 # დღიური / DGIURI — ოფიციალური განახლება Google Play-ის დამტკიცების შემდეგ
 
 განახლების ჩანაწერი: 2026-11-08
-სტატუსი: **მომზადებული სამუშაო ვერსია 0.18; ოფიციალური Play update ჯერ არ არის მზად და არ უნდა აიტვირთოს.**
+სტატუსი: **მომზადებული სამუშაო ვერსია 0.19; ოფიციალური Play update ჯერ არ არის მზად და არ უნდა აიტვირთოს.**
 
-## უკვე მომზადებული 0.18
+## უკვე მომზადებული 0.19
+- 0.19: Only calendar fix — red outlines around dates with tasks/reminders in week/month; do not change anything else.
 - 0.18-ში ფერების პალიტრა მოქმედებს ყველა ძირითად ნაწერზე (სათაურები, მენიუ, აღწერები, ამოცანები, ველები) ღია და მუქ რეჟიმებში; ფონი დარჩეს ცალკე ღია/მუქი. წაკითხვადობისთვის ღიაზე მუქი, მუქზე ნათელი ტექსტია; საფრთხის/შესრულებული საქმეების წითელი ნიშნები შენარჩუნებულია.
 - „დღეს“ გვერდზე საათობრივი განრიგი იკეცება/იშლება სათაურზე დაჭერით; თავდაპირველად დაკეცილია.
 - ექვსი ქვედა ნავიგაციის ჩანართი თანაბრად ნაწილდება ეკრანის სიგანეზე და ჰორიზონტალურად არ სქროლავს.
 - შენარჩუნებულია 0.16-ის „დღეს“ გვერდიდან TOP-ისა და ძიების ამოღება; ზოგადი სიის ჭიკარტით ჩანაწერების მაღლა დამაგრება.
 - ვებ 0.18-ში ჭიკარტის მდგომარეობა ინახება გადატვირთვის შემდეგ.
-- Android source: ge.weeklyplus.app, versionCode 10, versionName 0.18-alpha; target SDK 36.
+- Android source: ge.weeklyplus.app, versionCode 11, versionName 0.19-alpha; target SDK 36.
 - Android debug APK: ge.weeklyplus.app.test — მხოლოდ პარალელური ტესტირებისთვის, არა ძველი Play აპის ჩანაცვლებისთვის.
 - არსებული AAB არის ხელმოუწერელი და არ არის Play Console-ში ასატვირთად ვარგისი.
 
 ## არსებული ფაილები
-- Source/Android workspace: OneDrive/Desktop/DIARY_ANDROID_0.18
+- Source/Android workspace: OneDrive/Desktop/DIARY_ANDROID_0.19
 - Android repository: https://github.com/piraligame/dgiuri
-- Web preview: https://piraligame.github.io/pirali/diary-alpha18-webtest/index.html?v=18
-- Android test: https://raw.githubusercontent.com/piraligame/dgiuri/main/downloads/alpha018/DGIURI_Alpha_0.18_TEST_Parallel.apk
+- Web preview: https://piraligame.github.io/pirali/diary-alpha19-webtest/index.html?v=19
+- Android test: https://raw.githubusercontent.com/piraligame/dgiuri/main/downloads/alpha019/DGIURI_Alpha_0.19_TEST_Parallel.apk
 
 ## აუცილებელი ეტაპები, როგორც კი აპლიკაცია Google Play-ში დამტკიცდება
 1. გადავამოწმოთ Play Console-ის რეალური ამჟამინდელი versionCode, არხი და აპის მთლიანობის (App integrity) upload key vs app signing key. არ ვივარაუდოთ, რომ GitHub APK აუცილებლად ანაცვლებს Play აპს.
