@@ -42,6 +42,31 @@ private val MaterialShape = RoundedCornerShape(20.dp)
 private val ca = Locale.forLanguageTag("ka-GE")
 private val en = Locale.ENGLISH
 
+/** Text is tinted by the chosen palette; page surfaces keep their light/dark backgrounds.
+ * Use saturated dark ink on white, luminous light ink on black for readable text.
+ */
+private data class DiaryTextPalette(val ink:Color,val action:Color,val onAction:Color)
+private fun diaryTextPalette(name:String,dark:Boolean):DiaryTextPalette {
+    val ink = if(dark) when(name) {
+        "purple"->Color(0xFFD9BFF7); "blue"->Color(0xFFC0DBFF)
+        "rose"->Color(0xFFFFD1E1); "amber"->Color(0xFFFFE0A8)
+        "cyan"->Color(0xFFBAF3F2); "slate"->Color(0xFFD6E1F1)
+        else->Color(0xFFB8F5D4)
+    } else when(name) {
+        "purple"->Color(0xFF563877); "blue"->Color(0xFF1B4D83)
+        "rose"->Color(0xFF762C49); "amber"->Color(0xFF5D421D)
+        "cyan"->Color(0xFF155258); "slate"->Color(0xFF37465C)
+        else->Color(0xFF164B38)
+    }
+    val action = if(dark) ink else when(name) {
+        "purple"->Color(0xFF754AA8); "blue"->Color(0xFF235EAA)
+        "rose"->Color(0xFF9A3763); "amber"->Color(0xFF775016)
+        "cyan"->Color(0xFF116971); "slate"->Color(0xFF465668)
+        else->Color(0xFF196C56)
+    }
+    return DiaryTextPalette(ink,action,if(dark)Color(0xFF101D17) else Color.White)
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,13 +87,21 @@ private fun WeeklyApp() {
     LaunchedEffect(store.onboarded) { if (!store.onboarded) store.finishOnboarding() }
     DiaryWords.code = store.language
     val lang = store.english
-    val accent = when(store.accent) {
-        "purple"->Color(0xFF8559AD);"blue"->Color(0xFF3179BF);"rose"->Color(0xFFB44D80)
-        "amber"->Color(0xFFB17C27);"cyan"->Color(0xFF109BA0);"slate"->Color(0xFF586575)
-        else->Pine
-    }
-    val colors = if (store.dark) darkColorScheme(primary = accent, secondary = accent, background = Color(0xFF090D0C), surface = Color(0xFF17211D), surfaceVariant = Color(0xFF26362E))
-        else lightColorScheme(primary = accent, secondary = accent, background = OffWhite, surface = Color.White, surfaceVariant = Mint)
+    val palette = diaryTextPalette(store.accent,store.dark)
+    // Text colours update across all Material screens, not just controls.
+    val colors = if (store.dark) darkColorScheme(
+        primary=palette.action, onPrimary=palette.onAction,
+        secondary=palette.action, onSecondary=palette.onAction,
+        onBackground=palette.ink, onSurface=palette.ink, onSurfaceVariant=palette.ink,
+        onPrimaryContainer=palette.ink, onSecondaryContainer=palette.ink,
+        background=Color(0xFF090D0C), surface=Color(0xFF17211D),
+        surfaceVariant=Color(0xFF26362E))
+        else lightColorScheme(
+        primary=palette.action, onPrimary=palette.onAction,
+        secondary=palette.action, onSecondary=palette.onAction,
+        onBackground=palette.ink, onSurface=palette.ink, onSurfaceVariant=palette.ink,
+        onPrimaryContainer=palette.ink, onSecondaryContainer=palette.ink,
+        background=OffWhite, surface=Color.White, surfaceVariant=Mint)
     var page by remember { mutableStateOf("list") }
     var view by remember { mutableStateOf("month") }
     var date by remember { mutableStateOf(LocalDate.now()) }
@@ -111,13 +144,13 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.17", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.18", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
-                            Surface(color=Mint,shape=RoundedCornerShape(12.dp)) {
+                            Surface(color=MaterialTheme.colorScheme.surfaceVariant,shape=RoundedCornerShape(12.dp)) {
                                 Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment=Alignment.CenterVertically) {
-                                    Text(notice,Modifier.weight(1f), color=DarkPine, fontSize=12.sp)
-                                    Text("✕", Modifier.clickable { notice="" }.padding(5.dp), color=DarkPine)
+                                    Text(notice,Modifier.weight(1f), color=MaterialTheme.colorScheme.onSurface, fontSize=12.sp)
+                                    Text("✕", Modifier.clickable { notice="" }.padding(5.dp), color=MaterialTheme.colorScheme.onSurface)
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
@@ -170,14 +203,14 @@ private fun NavItems(current:String, english:Boolean, onChange:(String)->Unit) {
                     horizontalAlignment=Alignment.CenterHorizontally,
                     verticalArrangement=Arrangement.Center
                 ) {
-                    Surface(color=if(selected) Mint else Color.Transparent, shape=RoundedCornerShape(20.dp)) {
+                    Surface(color=if(selected) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent, shape=RoundedCornerShape(20.dp)) {
                         Text(icon,Modifier.padding(horizontal=7.dp,vertical=3.dp),fontSize=19.sp,
-                            color=if(selected) Pine else MaterialTheme.colorScheme.onSurface)
+                            color=if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     }
                     Text(visibleLabel,fontSize=if(compact) 8.sp else 9.sp,
                         fontWeight=if(selected) FontWeight.Bold else FontWeight.Normal,
                         textAlign=TextAlign.Center, maxLines=1, overflow=TextOverflow.Ellipsis,
-                        color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant)
+                        color=if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -263,7 +296,7 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
             Row(Modifier.fillMaxWidth().clickable { hourlyExpanded = !hourlyExpanded }.padding(vertical=4.dp),
                 verticalAlignment=Alignment.CenterVertically) {
                 Text(tr("საათობრივი განრიგი","Hourly schedule"),fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
-                Text("${today.count {taskComplete(it,date)}}/${today.size}",color=Pine,fontWeight=FontWeight.Bold)
+                Text("${today.count {taskComplete(it,date)}}/${today.size}",color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
                 Spacer(Modifier.width(12.dp))
                 Text(if(hourlyExpanded) "⌃" else "⌄",fontSize=22.sp,color=MaterialTheme.colorScheme.primary)
             }
@@ -275,7 +308,7 @@ private fun HomeScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->Uni
                         FilterChip(selected=sort==v,onClick={sort=v},label={Text(label,fontSize=10.sp)})
                     }
                 }
-                LinearProgressIndicator(progress={today.count {taskComplete(it,date)}.toFloat()/today.size},modifier=Modifier.fillMaxWidth().height(6.dp),color=Pine,trackColor=Mint)
+                LinearProgressIndicator(progress={today.count {taskComplete(it,date)}.toFloat()/today.size},modifier=Modifier.fillMaxWidth().height(6.dp),color=MaterialTheme.colorScheme.primary,trackColor=Mint)
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                     listOf("all" to (tr("ყველა","All")),"open" to (tr("გასაკეთებელი","To do")),"done" to (tr("შესრულებული","Done"))).forEach { (id,label)->
                         FilterChip(selected=filter==id,onClick={filter=id},label={Text(label,fontSize=11.sp)})
@@ -311,10 +344,10 @@ private fun TaskRow(task:PlanTask,date:LocalDate,store:PlannerStore,onEdit:(Plan
         Column(Modifier.weight(1f).clickable {onEdit(task)},verticalArrangement=Arrangement.spacedBy(3.dp)) {
             Text(task.title,fontWeight=FontWeight.Medium,fontSize=14.sp,color=if(done)MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,maxLines=2)
             Row(horizontalArrangement=Arrangement.spacedBy(5.dp),verticalAlignment=Alignment.CenterVertically) {
-                if(task.time.isNotEmpty()) Text(if(task.durationMinutes>0) "${task.time}–${taskTime(task)?.plusMinutes(task.durationMinutes.toLong())?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: task.time}" else task.time,color=Pine,fontSize=11.sp,fontWeight=FontWeight.Bold)
+                if(task.time.isNotEmpty()) Text(if(task.durationMinutes>0) "${task.time}–${taskTime(task)?.plusMinutes(task.durationMinutes.toLong())?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: task.time}" else task.time,color=MaterialTheme.colorScheme.primary,fontSize=11.sp,fontWeight=FontWeight.Bold)
                 Text(tr(task.category,categoryEn(task.category)),fontSize=10.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if(task.repeat!="none") Text("↻",color=Pine,fontSize=12.sp)
-                if(task.reminder>=0) Text("♩",color=Pine,fontSize=12.sp)
+                if(task.repeat!="none") Text("↻",color=MaterialTheme.colorScheme.primary,fontSize=12.sp)
+                if(task.reminder>=0) Text("♩",color=MaterialTheme.colorScheme.primary,fontSize=12.sp)
             }
         }
         Text(if(rank>0)"★" else "☆",Modifier.clickable {store.togglePriority(task,date)}.padding(9.dp),color=Amber,fontSize=25.sp)
@@ -373,7 +406,7 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
                                 Surface(color=if(d==date) Pine else Color.Transparent,shape=CircleShape) {
                                     Text("${d.dayOfMonth}",Modifier.padding(horizontal=8.dp,vertical=5.dp),fontSize=12.sp,color=if(d==date)Color.White else if(d.monthValue!=date.monthValue)Color.Gray else MaterialTheme.colorScheme.onSurface)
                                 }
-                                if(store.tasks.any {occurrence(it,d)}) Text("•",color=Pine,fontSize=12.sp)
+                                if(store.tasks.any {occurrence(it,d)}) Text("•",color=MaterialTheme.colorScheme.primary,fontSize=12.sp)
                             }
                         }
                     }
@@ -410,7 +443,7 @@ private fun YearCalendar(store:PlannerStore,date:LocalDate,onDate:(LocalDate)->U
                         modifier=Modifier.weight(1f).clickable { onDate(first); onView("month") }) {
                         Column(Modifier.padding(vertical=13.dp,horizontal=5.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)) {
                             Text(first.month.getDisplayName(TextStyle.SHORT,DiaryWords.locale()),fontSize=12.sp,fontWeight=FontWeight.Bold,color=if(selected) DarkPine else MaterialTheme.colorScheme.onSurface,maxLines=1)
-                            Text(if(count>0) "$count ${tr("საქმე","tasks")}" else "—",fontSize=10.sp,color=if(selected) Pine else MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
+                            Text(if(count>0) "$count ${tr("საქმე","tasks")}" else "—",fontSize=10.sp,color=if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
                         }
                     }
                 }
@@ -431,15 +464,15 @@ private fun GoalsScreen(store:PlannerStore,onAdd:()->Unit,onEditTask:(PlanTask)-
             val progress=store.tasks.filter {it.goalId==goal.id}.sumOf {it.completed.size}
             Panel {
                 Row(verticalAlignment=Alignment.CenterVertically) {
-                    Text("◎",fontSize=25.sp,color=Pine)
+                    Text("◎",fontSize=25.sp,color=MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
                         Text(goal.title,fontWeight=FontWeight.Bold)
                         Text(tr(goal.category,categoryEn(goal.category)),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text("${progress.coerceAtMost(goal.target)}/${goal.target}",fontWeight=FontWeight.Bold,color=Pine)
+                    Text("${progress.coerceAtMost(goal.target)}/${goal.target}",fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.primary)
                 }
-                LinearProgressIndicator(progress={progress.toFloat().div(goal.target.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(8.dp),color=Pine,trackColor=Mint)
+                LinearProgressIndicator(progress={progress.toFloat().div(goal.target.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(8.dp),color=MaterialTheme.colorScheme.primary,trackColor=Mint)
                 Text("${((progress.toFloat()/goal.target.coerceAtLeast(1))*100).coerceAtMost(100f).toInt()}%",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 var confirm by remember {mutableStateOf(false)}
                 TextButton(onClick={confirm=true}){Text(tr("მიზნის წაშლა","Delete goal"))}
@@ -469,7 +502,7 @@ private fun InsightsScreen(store:PlannerStore, modules:DiaryModules15) {
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             listOf((tr("შესრულებულია","Completed")) to (done+modules.done).toString(), (tr("შესრულება","Completion")) to "$ratio%").forEach { (label,value)->
                 Surface(shape=MaterialShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.weight(1f)) {
-                    Column(Modifier.padding(15.dp)) { Text(value,fontSize=29.sp,color=Pine,fontWeight=FontWeight.Bold);Text(label,fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
+                    Column(Modifier.padding(15.dp)) { Text(value,fontSize=29.sp,color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold);Text(label,fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
         }
@@ -641,7 +674,7 @@ private fun InlineClock(value:String,onChange:(String)->Unit,onDone:()->Unit,eng
                 Spacer(Modifier.width(8.dp))
                 OutlinedTextField(value="%02d".format(Locale.US,minute),onValueChange={raw->raw.toIntOrNull()?.takeIf{it in 0..59}?.let{set(hour,it)}},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),modifier=Modifier.width(80.dp))
                 Spacer(Modifier.weight(1f))
-                Text("%02d:%02d".format(Locale.US,hour,minute),fontWeight=FontWeight.Bold,color=Pine)
+                Text("%02d:%02d".format(Locale.US,hour,minute),fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.primary)
             }
         }
     }
