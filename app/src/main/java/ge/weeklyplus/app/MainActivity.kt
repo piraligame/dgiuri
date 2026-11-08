@@ -144,7 +144,7 @@ private fun WeeklyApp() {
                                 Text(DiaryWords.appName(), style=MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(tr("შენი დღეები, ლამაზად დაგეგმილი","Your days, beautifully planned"), style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("α 0.18", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
+                            Text("α 0.19", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.primary)
                         }
                         if (notice.isNotEmpty()) {
                             Surface(color=MaterialTheme.colorScheme.surfaceVariant,shape=RoundedCornerShape(12.dp)) {
@@ -387,8 +387,17 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
                     Surface(shape=RoundedCornerShape(12.dp), color=if(d==date)Pine else MaterialTheme.colorScheme.surface,modifier=Modifier.weight(1f).clickable{onDate(d);onView("day")}) {
                         Column(Modifier.padding(vertical=12.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                             Text(d.dayOfWeek.getDisplayName(TextStyle.SHORT,DiaryWords.locale()).take(2),fontSize=10.sp,color=if(d==date)Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${d.dayOfMonth}",fontSize=14.sp,fontWeight=FontWeight.Bold,color=if(d==date)Color.White else MaterialTheme.colorScheme.onSurface)
-                            if(store.tasks.any {occurrence(it,d)}) Text("•",color=if(d==date)Color.White else Pine)
+                            val hasEntry = store.tasks.any { occurrence(it,d) }
+                            Surface(
+                                shape=CircleShape,
+                                color=Color.Transparent,
+                                border=if(hasEntry) BorderStroke(2.dp,Color(0xFFD1293F)) else null
+                            ) {
+                                Box(Modifier.size(32.dp),contentAlignment=Alignment.Center) {
+                                    Text("${d.dayOfMonth}",fontSize=14.sp,fontWeight=FontWeight.Bold,
+                                        color=if(d==date) Color.White else MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
                         }
                     }
                 }
@@ -403,10 +412,18 @@ private fun CalendarScreen(store:PlannerStore,date:LocalDate,onDate:(LocalDate)-
                         (0..6).forEach { dayIndex ->
                             val d=first.plusDays((week*7+dayIndex).toLong())
                             Column(Modifier.weight(1f).clickable {onDate(d);onView("day")}.padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                                Surface(color=if(d==date) Pine else Color.Transparent,shape=CircleShape) {
-                                    Text("${d.dayOfMonth}",Modifier.padding(horizontal=8.dp,vertical=5.dp),fontSize=12.sp,color=if(d==date)Color.White else if(d.monthValue!=date.monthValue)Color.Gray else MaterialTheme.colorScheme.onSurface)
+                                val hasEntry = store.tasks.any { occurrence(it,d) }
+                                Surface(
+                                    color=if(d==date) Pine else Color.Transparent,
+                                    shape=CircleShape,
+                                    border=if(hasEntry) BorderStroke(2.dp,Color(0xFFD1293F)) else null
+                                ) {
+                                    Box(Modifier.size(32.dp),contentAlignment=Alignment.Center) {
+                                        Text("${d.dayOfMonth}",fontSize=12.sp,fontWeight=FontWeight.Bold,
+                                            color=if(d==date) Color.White else if(d.monthValue!=date.monthValue) Color.Gray
+                                                else MaterialTheme.colorScheme.onSurface)
+                                    }
                                 }
-                                if(store.tasks.any {occurrence(it,d)}) Text("•",color=MaterialTheme.colorScheme.primary,fontSize=12.sp)
                             }
                         }
                     }
