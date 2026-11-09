@@ -1,0 +1,10 @@
+{
+  "versionCode": 14,
+  "test_package": "ge.weeklyplus.app.test",
+  "google_firebase_project": "dgiuri-weeklyplus-ge-2026",
+  "native_login_implemented": true,
+  "cloud_write_enabled": false,
+  "physical_device_login_tested": false,
+  "play_upgrade_ready": false,
+  "sha256": "dcd5ffe5f7961487eb711bdbca458a9e78d757e565e8b49107fbb402909ae322"
+}
