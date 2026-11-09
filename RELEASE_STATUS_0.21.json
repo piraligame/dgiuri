@@ -1,0 +1,12 @@
+{
+  "source": "0.20 Android test source, updated to 0.21",
+  "debug_package": "ge.weeklyplus.app.test",
+  "native_release_package": "ge.weeklyplus.app",
+  "versionCode": 13,
+  "versionName": "0.21-alpha",
+  "debug_apk_sha256": "111aa295ed7eb828963292c5c8d012080e1233b309064bcb34694574247142b5",
+  "play_update_ready": false,
+  "reason": "stable upload signing password missing; signed AAB not produced",
+  "google_native_sync": false,
+  "device_qa": false
+}
